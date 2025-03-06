@@ -1,0 +1,53 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+def load_data(file_2019, file_2021, common_questions):
+    # Load data from Excel
+    df_2019 = pd.read_excel(file_2019, sheet_name="Dados brutos")
+    df_2021 = pd.read_excel(file_2021, sheet_name="Dados brutos")
+
+    # Filter only common questions
+    df_2019_filtered = df_2019[common_questions]
+    df_2021_filtered = df_2021[common_questions]
+
+    # Get response distributions
+    summary_2019 = df_2019_filtered.apply(pd.Series.value_counts, normalize=True) * 100
+    summary_2021 = df_2021_filtered.apply(pd.Series.value_counts, normalize=True) * 100
+
+    # Combine for comparison
+    comparison_df = pd.concat([summary_2019, summary_2021], axis=1, keys=["2019", "2021"])
+    return comparison_df
+
+def plot_question_comparison(comparison_df, question):
+    if question not in comparison_df.columns.levels[1]:
+        print(f"Question {question} not found in dataset.")
+        return
+
+    data = comparison_df[question].dropna().reset_index()
+    data = data.melt(id_vars=['index'], var_name='Year', value_name='Percentage')
+
+    plt.figure(figsize=(10, 6))
+    sns.barplot(x='index', y='Percentage', hue='Year', data=data, palette=['blue', 'orange'])
+    plt.title(f'Comparison of Responses for {question} (2019 vs 2021)')
+    plt.xlabel('Response')
+    plt.ylabel('Percentage')
+    plt.legend(title='Year')
+    plt.show()
+    data = comparison_df['2019_Q14'].dropna().reset_index()
+
+# Example usage:
+# common_questions = ['Q10', 'Q12', 'Q14', 'Q16', 'Q18', 'Q20', 'Q22', 'Q24', 'Q26', 'Q28']
+# comparison_df = load_data("alunos_2019.xlsx", "alunos_2021.xlsx", common_questions)
+# plot_question_comparison(comparison_df, 'Q14')
+
+# Define the common questions you want to compare
+common_questions = ['Q10', 'Q12', 'Q14', 'Q16', 'Q18', 'Q20', 'Q22', 'Q24', 'Q26', 'Q28']
+
+comparison_df = load_data("C:/Users/danbl/IdeaProjects/planilha Helena/Meu questionário aluno 2019.xlsx",
+                          "C:/Users/danbl/IdeaProjects/planilha Helena/Meu questionário 2021 alunos.xlsx",
+                          common_questions)
+print(comparison_df.columns)  # This will show all available columns
+
+plot_question_comparison(comparison_df[['2019_Q14', '2021_Q14']])
+
